@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload receipt image</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-5">
+    <div class="card shadow-sm">
+        <h3>Upload the receipt image for OCR processing</h3>
+    </div>
+
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                {{ form.as_p }}
+            </div>
+
+            <button type="submit" class="btn btn-success"> Submit </button>
+            <a href="{% url 'list_files' %}" class="btn btn-secondary ms-2">Check the list</a>
+        </form>
+    </div>
+
+    <div class="card-footer text-muted">
+        Hello: <strong>{{ request.user.username }}</strong>
+    </div>
+
+</body>
+</html>

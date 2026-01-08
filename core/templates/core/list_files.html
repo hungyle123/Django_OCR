@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>List Receipt</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Your receipt</h2>
+        <a href="{% url 'upload_file' %}" class="btn btn-primary"> New Upload </a>
+    </div>
+
+    <table class="table table-bordered table-hover shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Image</th>
+                <th>Date upload</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for doc in documents %}
+            <tr>
+                <td>{{ doc.id }}</td>
+                <td>
+                    {% if doc.image %}
+                        <img src="{{ doc.image.url }}" alt="Invoice" style="height: 60px; width: auto;">
+                        <!--{{doc.image.url}}-->
+                    {% else %}
+                        No Image
+                    {% endif %}
+                </td>
+                <td>{{ doc.uploaded_at|date:"d/m/Y H:i" }}</td>
+                <td>
+                    {% if doc.status == 'completed' %}
+                        <span class="badge bg-success">Completed</span>
+                    {% elif doc.status == 'failed' %}
+                        <span class="badge bg-danger">Failed</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-info">Detail</button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">You dont have any receipt!</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>
