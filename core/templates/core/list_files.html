@@ -20,6 +20,7 @@
                 <th>Date upload</th>
                 <th>Status</th>
                 <th>Action</th>
+                <th>Preview</th>
             </tr>
         </thead>
         <tbody>
@@ -46,6 +47,14 @@
                 </td>
                 <td>
                     <button class="btn btn-sm btn-info">Detail</button>
+                </td>
+                <td>
+                    {% if doc.invoice_result %}
+                        <!--{{ doc.invoice_result.raw_text|truncatechars:50 }}-->
+                         {{ doc.invoice_result.raw_text }}
+                    {% else %}
+                        <span class="text-muted">Dont have the result</span>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}

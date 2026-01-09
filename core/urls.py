@@ -3,6 +3,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.upload_file, name='upload_file'), # Dấu '' nghĩa là trang chủ của app này
+    path('', views.home, name='home'), # Dấu '' nghĩa là trang chủ của app này
+    path('upload/', views.upload_file, name='upload_file'),
     path('lists/', views.list_files, name='list_files'),
 ]
