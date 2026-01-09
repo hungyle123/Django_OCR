@@ -35,28 +35,17 @@ def upload_file(request):
                 raw_text_lines = []
 
                 # ['input_path', 'page_index', 'doc_preprocessor_res', 'dt_polys', 'model_settings', 'text_det_params', 'text_type', 'text_rec_score_thresh', 'return_word_box', 'rec_texts', 'rec_scores', 'rec_polys', 'vis_fonts', 'textline_orientation_angles', 'rec_boxes']
-                print(result[0]['rec_texts'])
-                if(result[0]['rec_texts'] is None):
-                    print("None")
-                print(len(result[0]['rec_texts']))
-
-                # print(result[0]['vis_fonts'])
-                # if(result[0]['vis_fonts'] is None):
-                #     print("None")
                 # print("\n" + "="*50)
                 # print("--- CẤU TRÚC DỮ LIỆU PADDLE TRẢ VỀ ---")
                 # pprint.pprint(result)  # In đẹp (Pretty Print)
                 # print("="*50 + "\n")
-                # # Kiểm tra result[0] có dữ liệu không (tránh lỗi nếu ảnh trắng trơn)
-                # # if result and result[0]:
-                # #     for i,line in enumerate(result[0]):
-                # #         # Cấu trúc line: [ [tọa độ], ("nội dung chữ", 0.99) ]
-                # #         text_content = line[1][0] 
-                # #         raw_text_lines.append(text_content)
-                # #         print(i)
-                # #         print(line)
+                if result and result[0]:
+                    for i,text in enumerate(result[0]['rec_texts']):
+                        raw_text_lines.append(text)
+                        # print(i)
+                        # print(text)
                 
-                text_result = "\n".join(raw_text_lines)
+                text_result = " ".join(raw_text_lines)
 
                 Invoices.objects.create(
                     document=doc,
@@ -87,3 +76,19 @@ def list_files(request):
 
 def home(request):
     return render(request, 'core/home.html')
+
+
+from .forms import SignUpForm
+from django.contrib.auth import login
+
+def signup(request):
+    if request.method == 'POST':
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('home')
+    else:
+        form = SignUpForm()
+    
+    return render(request, 'registration/signup.html', {'form': form})
