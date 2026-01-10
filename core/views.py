@@ -27,7 +27,7 @@ def upload_file(request):
 
             try:
                 img_path = doc.image.path
-                img = Image.open(img_path)
+                # img = Image.open(img_path)
                 # lát nx test = Vie
                 # text_result = pytesseract.image_to_string(img, lang='vie+eng')
                 result = ocr_model.ocr(img_path)
