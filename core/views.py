@@ -1,12 +1,19 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .forms import DocumentForm
-from .models import Document, Invoices
+from .models import Document, Invoices, InvoiceItem
 import pytesseract
 from PIL import Image
 from django.conf import settings
 import os
 import pprint
+from dotenv import load_dotenv
+from google import genai
+import json
+import re
+
+load_dotenv()
+client = genai.Client()
 
 pytesseract.pytesseract.tesseract_cmd = r'D:\TesseractOCR\tesseract.exe'
 
@@ -45,13 +52,62 @@ def upload_file(request):
                         # print(i)
                         # print(text)
                 
-                text_result = " ".join(raw_text_lines)
+                text_result = "\n".join(raw_text_lines)
 
-                Invoices.objects.create(
-                    document=doc,
-                    raw_text=text_result
+                prompt = f"""
+                Extract the following OCR text to the structure JSON.
+                
+                OCR Text:
+                \"\"\"
+                {text_result}
+                \"\"\"
+
+                Structure JSON(only JSON, no markdown):
+                {{
+                    "invoice_no": "Number of the receipt (string or null)",
+                    "seller": "Name of the seller or store (string or null)",
+                    "date": "YYYY-MM-DD (string or null)",
+                    "items": [
+                        {{
+                            "product_name": Name product (string, please change to correct Vietnamese word if the text recongized as Vietnamese),
+                            "quantity": Quantity (number, default 1),
+                            "unit_price": Unit price (number, default VND, if the unit price is USD or any concurrency find the exchange into VND),
+                            "total_price": Total price (number)
+                        }}
+                    ]
+                }}
+                """
+
+                response = client.models.generate_content(
+                    model='models/gemini-2.5-flash', 
+                    contents=prompt
                 )
 
+                print(response)
+
+                clean_json_str = response.text.replace('```json', '').replace('```', '').strip()
+                data = json.loads(clean_json_str)
+
+                print("--- Gemini JSON Result: ---")
+                print(data)
+
+                invoice = Invoices.objects.create(
+                    document=doc,
+                    raw_text=text_result, 
+                    invoice_no=data.get('invoice_no'),
+                    seller=data.get('seller'),
+                    date=data.get('date') if data.get('date') else None
+                )
+
+                items_list = data.get('items', [])
+                for item in items_list:
+                    InvoiceItem.objects.create(
+                        invoice=invoice, 
+                        product_name=item.get('product_name', 'Unknown product'),
+                        quantity=item.get('quantity', 1),
+                        unit_price=item.get('unit_price', 0),
+                        total_price=item.get('total_price', 0)
+                    )
                 doc.status = 'completed'
                 doc.save()
 
