@@ -122,7 +122,7 @@ def upload_file(request):
                         }
                     ],
                     model="qwen/qwen3-32b",
-                    response_format={"type": "json_object"}, 
+                    #response_format={"type": "json_object"}, 
                     temperature=0, 
                 )
 
