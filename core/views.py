@@ -10,18 +10,25 @@ import pprint
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from groq import Groq
 from django.db.models import Sum
 import json
 import re
+from gradio_client import Client as GradioClient, handle_file # Đổi tên để tránh nhầm với Groq
 
 load_dotenv()
-client = genai.Client()
+# client = genai.Client()
 
-pytesseract.pytesseract.tesseract_cmd = r'D:\TesseractOCR\tesseract.exe'
+api_key = os.getenv("GROQ_API_KEY")
+client = Groq(api_key=api_key)
 
-from paddleocr import PaddleOCR
+# pytesseract.pytesseract.tesseract_cmd = r'D:\TesseractOCR\tesseract.exe'
 
-ocr_model = PaddleOCR(use_angle_cls=True, lang='vi')
+# from paddleocr import PaddleOCR
+
+# ocr_model = PaddleOCR(use_angle_cls=True, lang='vi')
+
+ocr_client = GradioClient("hungnguyen04/invoice-ocr")
 
 @login_required
 def upload_file(request):
@@ -39,24 +46,37 @@ def upload_file(request):
                 # img = Image.open(img_path)
                 # lát nx test = Vie
                 # text_result = pytesseract.image_to_string(img, lang='vie+eng')
-                result = ocr_model.ocr(img_path)
+                # result = ocr_model.ocr(img_path)
 
-                raw_text_lines = []
-
-                # ['input_path', 'page_index', 'doc_preprocessor_res', 'dt_polys', 'model_settings', 'text_det_params', 'text_type', 'text_rec_score_thresh', 'return_word_box', 'rec_texts', 'rec_scores', 'rec_polys', 'vis_fonts', 'textline_orientation_angles', 'rec_boxes']
-                # print("\n" + "="*50)
-                # print("--- CẤU TRÚC DỮ LIỆU PADDLE TRẢ VỀ ---")
-                # pprint.pprint(result)  # In đẹp (Pretty Print)
-                # print("="*50 + "\n")
-                if result and result[0]:
-                    for i,text in enumerate(result[0]['rec_texts']):
-                        raw_text_lines.append(text)
-                        # print(i)
-                        # print(text)
+                # raw_text_lines = []
+                # if result and result[0]:
+                #     for i,text in enumerate(result[0]['rec_texts']):
+                #         raw_text_lines.append(text)
+                #         # print(i)
+                #         # print(text)
                 
-                text_result = "\n".join(raw_text_lines)
+                # text_result = "\n".join(raw_text_lines)
+
+                print("1. Đang gửi sang Hugging Face...")
+                ocr_result = ocr_client.predict(
+                    img=handle_file(img_path), 
+                    api_name="/inference"
+                )
+                
+                text_result = str(ocr_result)
+                print("--- OCR Text Result: ---")
 
                 print(text_result)
+
+                system_prompt = """
+                    You are an AI assistant specialized in processing Vietnamese invoice data.
+                    Task: Extract information from the provided OCR text and return accurate JSON.
+
+                    Requirements:
+                    1. Output ONLY the JSON object. Do not include any conversational text, markdown formatting (like ```json), or explanations.
+                    2. If a field has no information, set the value to null.
+                    3. Strictly adhere to the sample JSON structure provided below.
+                """
 
                 prompt = f"""
                 Extract the following OCR text to the structure JSON.
@@ -82,17 +102,34 @@ def upload_file(request):
                 }}
                 """
 
-                response = client.models.generate_content(
-                    model='models/gemini-2.5-flash', 
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        response_mime_type='application/json' 
-                    )
+                # response = client.models.generate_content(
+                #     model='models/gemini-2.5-flash', 
+                #     contents=prompt,
+                #     config=types.GenerateContentConfig(
+                #         response_mime_type='application/json' 
+                #     )
+                # )
+
+                response = client.chat.completions.create(
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": system_prompt,
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt,
+                        }
+                    ],
+                    model="qwen/qwen3-32b",
+                    response_format={"type": "json_object"}, 
+                    temperature=0, 
                 )
 
                 print(response)
 
-                clean_json_str = response.text.replace('```json', '').replace('```', '').strip()
+                #clean_json_str = response.text.replace('```json', '').replace('```', '').strip()
+                clean_json_str = response.choices[0].message.content.replace('```json', '').replace('```', '').strip()
                 data = json.loads(clean_json_str)
 
                 print("--- Gemini JSON Result: ---")
