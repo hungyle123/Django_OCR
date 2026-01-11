@@ -3,17 +3,17 @@ from django.contrib.auth.decorators import login_required
 from .forms import DocumentForm
 from .models import Document, Invoices, InvoiceItem
 import pytesseract
-from PIL import Image
-from django.conf import settings
+# from PIL import Image
+# from django.conf import settings
 import os
-import pprint
+# import pprint
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
+# from google import genai
+# from google.genai import types
 from groq import Groq
 from django.db.models import Sum
 import json
-import re
+# import re
 from gradio_client import Client as GradioClient, handle_file # Đổi tên để tránh nhầm với Groq
 
 load_dotenv()

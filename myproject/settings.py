@@ -84,6 +84,8 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 #     }
 # }
 
+
+# postgresql://db_invoice_user:HkPLWGdXyxqMkuBpTBbMckA9mrzqklmg@dpg-d5hs3k2li9vc73alo1gg-a/db_invoice
 DATABASES = {
     'default': dj_database_url.config(
         default='sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3'),
