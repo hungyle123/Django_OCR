@@ -36,7 +36,7 @@ class Invoices(models.Model):
         )
     
     invoice_no = models.CharField(max_length=20, blank=True, null=True, verbose_name='No of Receipts')
-    seller = models.CharField(max_length=30, blank=True, null=True, verbose_name='Unit seller')
+    seller = models.CharField(max_length=100, blank=True, null=True, verbose_name='Unit seller')
     date = models.DateField(blank=True, null=True, verbose_name='Date purchase')
 
     # total_amount = models.DecimalField(
