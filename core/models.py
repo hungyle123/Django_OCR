@@ -35,7 +35,7 @@ class Invoices(models.Model):
         verbose_name='Original document',
         )
     
-    invoice_no = models.CharField(max_length=20, blank=True, null=True, verbose_name='No of Receipts')
+    invoice_no = models.CharField(max_length=100, blank=True, null=True, verbose_name='No of Receipts')
     seller = models.CharField(max_length=100, blank=True, null=True, verbose_name='Unit seller')
     date = models.DateField(blank=True, null=True, verbose_name='Date purchase')
 
