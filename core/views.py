@@ -9,6 +9,8 @@ import os
 import pprint
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
+from django.db.models import Sum
 import json
 import re
 
@@ -54,6 +56,8 @@ def upload_file(request):
                 
                 text_result = "\n".join(raw_text_lines)
 
+                print(text_result)
+
                 prompt = f"""
                 Extract the following OCR text to the structure JSON.
                 
@@ -80,7 +84,10 @@ def upload_file(request):
 
                 response = client.models.generate_content(
                     model='models/gemini-2.5-flash', 
-                    contents=prompt
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type='application/json' 
+                    )
                 )
 
                 print(response)
@@ -123,6 +130,31 @@ def upload_file(request):
         form = DocumentForm()
 
     return render(request, 'core/upload.html', {'form': form})
+
+
+@login_required
+def report_dashboard(request):
+
+    items = InvoiceItem.objects.filter(
+        invoice__document__user=request.user
+    ).select_related('invoice').order_by('-invoice__date', '-id')
+
+    total_spent = items.aggregate(Sum('total_price'))['total_price__sum']
+
+    if total_spent is None:
+        total_spent = 0
+
+    total_items_count = items.count() 
+    total_invoices_count = Invoices.objects.filter(document__user=request.user).count() 
+
+    context = {
+        'items': items,
+        'total_spent': total_spent,
+        'total_items_count': total_items_count,
+        'total_invoices_count': total_invoices_count,
+    }
+    
+    return render(request, 'core/report_dashboard.html', context)
 
 @login_required
 def list_files(request):

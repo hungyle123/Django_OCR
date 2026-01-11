@@ -15,6 +15,7 @@
             <p>Hello, <strong>{{ user.username }}</strong>!</p>
             <a class="btn btn-primary btn-lg" href="{% url 'upload_file' %}" role="button">Upload now</a>
             <a class="btn btn-danger btn-lg" href="{% url 'list_files' %}" role="button">Check your list</a>
+            <a class="nav-link" href="{% url 'report_dashboard' %}">Báo cáo chi tiêu</a>
             
             <form action="{% url 'logout' %}" method="post" class="d-inline">
                 {% csrf_token %}

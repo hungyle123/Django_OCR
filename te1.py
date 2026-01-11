@@ -6,12 +6,12 @@ load_dotenv()
 
 client = genai.Client()
 
-image_path = 'hoadon_test.jpg'
+image_path = r'D:\Folder_code_project\test_django\AnyConv.com__ban-canh-chua-tom-tinh-rieng-tien-tom-880000-dongkg_20150805104451634.png'
 
 response = client.models.generate_content(
     model='models/gemini-2.5-flash',
     contents=[
-        'Tell me a story based on this image',
+        'Đọc nội dung trong hình này',
         Image.open(image_path)
     ]
 )
