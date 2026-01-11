@@ -122,7 +122,7 @@ def upload_file(request):
                         }
                     ],
                     model="qwen/qwen3-32b",
-                    #response_format={"type": "json_object"}, 
+                    response_format={"type": "json_object"}, 
                     temperature=0, 
                 )
 
@@ -154,9 +154,6 @@ def upload_file(request):
                     )
                 doc.status = 'completed'
                 doc.save()
-
-                print("--- OCR THÀNH CÔNG ---")
-                print(text_result) 
             except Exception as e:
                 print(f"--- LỖI OCR: {e} ---")
                 doc.status = 'failed'
