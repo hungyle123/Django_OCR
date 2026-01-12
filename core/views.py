@@ -15,6 +15,7 @@ from django.db.models import Sum
 import json
 # import re
 from gradio_client import Client as GradioClient, handle_file # Đổi tên để tránh nhầm với Groq
+from django.http import JsonResponse
 
 load_dotenv()
 # client = genai.Client()
@@ -34,6 +35,8 @@ ocr_client = GradioClient("hungnguyen04/invoice-ocr")
 def upload_file(request):
     if request.method == 'POST':
         form = DocumentForm(request.POST, request.FILES)
+
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
         if form.is_valid():
             doc = form.save(commit=False)
@@ -154,12 +157,28 @@ def upload_file(request):
                     )
                 doc.status = 'completed'
                 doc.save()
+
+                if is_ajax:
+                    return JsonResponse({
+                        'status': 'success', 
+                        'message': 'Success analys',
+                        'invoice_id': doc.id
+                    })
+                else:
+                    return redirect('upload_file')
             except Exception as e:
                 print(f"--- LỖI OCR: {e} ---")
                 doc.status = 'failed'
                 doc.save()
 
-            return redirect('upload_file')
+                if is_ajax:
+                    return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+                else:
+                    form.add_error(None, f"Error processing: {e}")
+                    return render(request, 'core/upload.html', {'form': form})
+        else:
+            if is_ajax:
+                return JsonResponse({'status': 'error', 'message': 'Form không hợp lệ'}, status=400)
     else:
         form = DocumentForm()
 

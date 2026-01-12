@@ -6,26 +6,159 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="container mt-5">
+    
     <div class="card shadow-sm">
-        <h3>Upload the receipt image for OCR processing</h3>
-    </div>
+        <div class="card-header">
+            <h3>Upload the receipt image for OCR processing</h3>
+        </div>
 
-    <div class="card-body">
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" id="upload-form">
+                {% csrf_token %}
 
-            <div class="mb-3">
-                {{ form.as_p }}
+                <div class="mb-3">
+                    {{ form.as_p }}
+                </div>
+
+                <button type="submit" class="btn btn-success" id="btn-submit"> Submit </button>
+                <a href="{% url 'list_files' %}" class="btn btn-secondary ms-2">Check the list</a>
+                <a class="btn btn-info btn-secondary text-white ms-2" href="{% url 'report_dashboard' %}" role="button">Báo cáo chi tiêu</a>
+            </form>
+
+            <div id="progress-container" class="mt-4" style="display: none;">
+                <p id="progress-text" class="fw-bold mb-1">Uploading...</p>
+                <div class="progress" style="height: 25px;">
+                    <div id="progress-bar" 
+                         class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" 
+                         style="width: 0%; transition: width 0.4s;">
+                         0%
+                    </div>
+                </div>
+                <small id="progress-subtext" class="text-muted">Please do not close the browser.</small>
             </div>
 
-            <button type="submit" class="btn btn-success"> Submit </button>
-            <a href="{% url 'list_files' %}" class="btn btn-secondary ms-2">Check the list</a>
-        </form>
+            <div id="error-alert" class="alert alert-danger mt-3" style="display: none;"></div>
+        </div>
+
+        <div class="card-footer text-muted">
+            Hello: <strong>{{ request.user.username }}</strong>
+        </div>
     </div>
 
-    <div class="card-footer text-muted">
-        Hello: <strong>{{ request.user.username }}</strong>
-    </div>
+    <script>
+        document.getElementById('upload-form').addEventListener('submit', function(e) {
+            e.preventDefault(); // Stop default reload
+
+            // 1. Setup variables
+            var form = this;
+            var formData = new FormData(form);
+            var xhr = new XMLHttpRequest();
+            
+            var btnSubmit = document.getElementById('btn-submit');
+            var progressContainer = document.getElementById('progress-container');
+            var progressBar = document.getElementById('progress-bar');
+            var progressText = document.getElementById('progress-text');
+            var progressSubtext = document.getElementById('progress-subtext');
+            var errorAlert = document.getElementById('error-alert');
+
+            // 2. Reset UI
+            errorAlert.style.display = 'none';
+            progressContainer.style.display = 'block';
+            btnSubmit.disabled = true; 
+            btnSubmit.innerText = 'Processing...';
+
+            // 3. Simulation Timer for AI Processing phase
+            var simulationInterval;
+
+            // --- PHASE 1: REAL UPLOAD PROGRESS ---
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    var percent = Math.round((e.loaded / e.total) * 100);
+                    // Cap at 99% to wait for server response
+                    if (percent >= 100) percent = 99; 
+                    
+                    progressBar.style.width = percent + '%';
+                    progressBar.innerText = percent + '%';
+                    progressText.innerText = "Uploading image...";
+                }
+            });
+
+            // --- PHASE 2: UPLOAD FINISHED, WAITING FOR AI ---
+            xhr.upload.addEventListener('load', function() {
+                // Switch to "AI Processing" mode
+                progressText.innerText = " AI is analyzing the receipt...";
+                progressSubtext.innerText = "This might take a few seconds. Please wait.";
+                progressBar.classList.remove('bg-primary');
+                progressBar.classList.add('bg-success'); // Change color to green
+                
+                // Start fake progress from 0% to 90%
+                var fakePercent = 0;
+                progressBar.style.width = '0%';
+                progressBar.innerText = '0%';
+
+                simulationInterval = setInterval(function() {
+                    // Increment logic: fast at first, slow at the end
+                    if (fakePercent < 50) {
+                        fakePercent += 5;
+                    } else if (fakePercent < 80) {
+                        fakePercent += 2;
+                    } else if (fakePercent < 95) {
+                        fakePercent += 0.5;
+                    }
+                    
+                    progressBar.style.width = fakePercent + '%';
+                    progressBar.innerText = Math.round(fakePercent) + '%';
+                }, 300); 
+            });
+
+            // --- PHASE 3: SERVER RESPONSE ---
+            xhr.open('POST', '', true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+            xhr.onload = function() {
+                clearInterval(simulationInterval); // Stop the fake timer
+                
+                if (xhr.status === 200) {
+                    // Success!
+                    progressBar.style.width = '100%';
+                    progressBar.innerText = '100%';
+                    progressText.innerText = " Completed!";
+                    
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.status === 'success') {
+                            setTimeout(function() {
+                                alert("Upload & Analysis Successful!");
+                                window.location.reload(); 
+                            }, 500);
+                        } else {
+                            showError(response.message || "Unknown error occurred.");
+                        }
+                    } catch (e) {
+                        showError("Invalid server response.");
+                    }
+                } else {
+                    showError("Server Error: " + xhr.status);
+                }
+            };
+
+            xhr.onerror = function() {
+                clearInterval(simulationInterval);
+                showError("Network Connection Error!");
+            };
+
+            xhr.send(formData);
+
+            function showError(msg) {
+                progressContainer.style.display = 'none';
+                errorAlert.innerText = "Error: " + msg;
+                errorAlert.style.display = 'block';
+                btnSubmit.disabled = false;
+                btnSubmit.innerText = 'Submit';
+            }
+        });
+    </script>
 
 </body>
 </html>
