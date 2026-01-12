@@ -45,7 +45,7 @@ def upload_file(request):
             doc.save()
 
             try:
-                img_path = doc.image.path
+                # img_path = doc.image.path
                 # img = Image.open(img_path)
                 # lát nx test = Vie
                 # text_result = pytesseract.image_to_string(img, lang='vie+eng')
@@ -60,9 +60,25 @@ def upload_file(request):
                 
                 # text_result = "\n".join(raw_text_lines)
 
+                try:
+                    # Ưu tiên 1: Lấy đường dẫn file trên ổ cứng (Dành cho Localhost chưa có Cloudinary)
+                    # Cách này giúp Hugging Face upload file từ máy bạn lên server của họ
+                    image_input = handle_file(doc.image.path)
+                    print("-> Đang dùng File Path (Upload từ Local)")
+                except Exception:
+                    # Ưu tiên 2: Nếu dòng trên lỗi (do đang dùng Cloudinary hoặc Render ko có ổ cứng thực)
+                    # Thì ta dùng URL public
+                    img_url = doc.image.url
+                    if not img_url.startswith('http'):
+                        img_url = request.build_absolute_uri(img_url)
+                    
+                    # handle_file cũng hỗ trợ nhận URL public
+                    image_input = handle_file(img_url)
+                    print(f"-> Đang dùng Image URL (Cloudinary): {img_url}")
+
                 print("1. Đang gửi sang Hugging Face...")
                 ocr_result = ocr_client.predict(
-                    img=handle_file(img_path), 
+                    img=image_input, 
                     api_name="/inference"
                 )
                 
