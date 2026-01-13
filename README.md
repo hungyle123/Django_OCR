@@ -37,15 +37,44 @@ The project leverages a hybrid approach:
 - Use **Groq API (Qwen-32B)** to intelligently parse raw text and identify key entities: *Transaction Date*, *Seller Name*, and *Total Amount*
 - Visualizes financial data through dynamic charts
 
-```mermaid
-graph TD
-    A[👤 User] -->|Upload Invoice Image| B(Django Backend)
-    B -->|1. Store Media| C{Cloudinary}
-    C -->|2. Return Image URL| B
-    B -->|3. Send URL for OCR| D[Hugging Face Spaces(PaddleOCR)]
-    D -->|4. Return Raw Text| B
-    B -->|5. Prompt + Raw Text| E[Groq API(LLM: Qwen-32B)]
-    E -->|6. Return Structured JSON| B
-    B -->|7. Save Data| F[(PostgreSQL DB)]
-    F -->|8. Update View| G[Dashboard UI]
+```text
+[User Upload] --> [Django/Cloudinary] --> [PaddleOCR]
+                                              |
+                                          (Raw Text)
+                                              |
+                                              v
+[Dashboard UI] <-- [PostgreSQL DB] <-- [Groq LLM Agent]
 ```
+
+## Installation & Setup
+
+Follow these steps to set up and run the project locally.
+
+Open your terminal and run the following commands:
+
+```bash
+git clone https://github.com/hungyle123/django_ocr.git
+cd django_ocr
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+```
+- Create a .env file
+```bash
+DEBUG=True
+SECRET_KEY=your_django_secret_key_here
+# Get your free API Key at: https://console.groq.com
+GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# --- Hugging Face (For PaddleOCR Private Space) ---
+HF_TOKEN=hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+- Running
+```bash
+python manage.py makemigrations
+python manage.py migrate
+python manage.py runserver
+```
+
+# ** Live Demo:** [https://invoice-ocr-web.onrender.com/](https://invoice-ocr-web.onrender.com/)
+
+> **Note:** The server is hosted on a free tier on Render and may spin down after inactivity. Please allow **up to 1 minute** for the initial cold start.
