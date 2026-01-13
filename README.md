@@ -75,6 +75,6 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-# ** Live Demo:** [https://invoice-ocr-web.onrender.com/](https://invoice-ocr-web.onrender.com/)
+#  Live Demo: [https://invoice-ocr-web.onrender.com/](https://invoice-ocr-web.onrender.com/)
 
 > **Note:** The server is hosted on a free tier on Render and may spin down after inactivity. Please allow **up to 1 minute** for the initial cold start.
