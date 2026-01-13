@@ -42,9 +42,9 @@ graph TD
     A[👤 User] -->|Upload Invoice Image| B(Django Backend)
     B -->|1. Store Media| C{Cloudinary}
     C -->|2. Return Image URL| B
-    B -->|3. Send URL for OCR| D[Hugging Face Spaces<br/>(PaddleOCR)]
+    B -->|3. Send URL for OCR| D[Hugging Face Spaces(PaddleOCR)]
     D -->|4. Return Raw Text| B
-    B -->|5. Prompt + Raw Text| E[Groq API<br/>(LLM: Qwen-32B)]
+    B -->|5. Prompt + Raw Text| E[Groq API(LLM: Qwen-32B)]
     E -->|6. Return Structured JSON| B
     B -->|7. Save Data| F[(PostgreSQL DB)]
     F -->|8. Update View| G[Dashboard UI]
